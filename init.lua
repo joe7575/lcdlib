@@ -24,7 +24,7 @@ lcdlib = {}
 lcdlib.registered_fonts = {}
 
 -- Version for compatibility checks
-lcdlib.version = 1.03
+lcdlib.version = 1.04
 
 -- Local functions
 ------------------

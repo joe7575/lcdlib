@@ -73,6 +73,9 @@ local function get_values(node)
 		if ndef.paramtype2 == "facedir" then
 			return facedir_values[node.param2]
 		end
+		if ndef.paramtype2 == "color4dir" then
+			return facedir_values[node.param2 % 4]
+		end
 	end
 end
 
