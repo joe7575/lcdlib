@@ -98,6 +98,17 @@ local function get_entities(pos)
 	return objrefs
 end
 
+local function get_dir(node)
+	local ndef = minetest.registered_nodes[node.name]
+	if ndef.paramtype2 == "wallmounted" then
+		return vector.multiply(minetest.wallmounted_to_dir(node.param2), -1)
+	elseif ndef.paramtype2 == "color4dir" then
+		return vector.multiply(minetest.fourdir_to_dir(node.param2), -1)
+	else
+		return vector.multiply(minetest.facedir_to_dir(node.param2), -1)
+	end
+end
+
 local function clip_pos_prop(posprop)
 	if posprop then
 		return math.max(-0.51, math.min(0.51, posprop))
@@ -149,7 +160,7 @@ function lcdlib.update_entities(pos)
 	local node = minetest.get_node(pos)
 	-- check if display is loaded and a player in front of the display
 	if node.name ~= "ignore" then
-		local dir = minetest.facedir_to_dir((node.param2 + 2) % 4)
+		local dir = get_dir(node)
 		dir.y = 0
 		local pos2 = vector.add(pos, vector.multiply(dir, RADIUS))
 		for _, obj in pairs(minetest.get_objects_inside_radius(pos2, RADIUS)) do
