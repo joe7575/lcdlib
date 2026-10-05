@@ -56,7 +56,7 @@ function lcdlib.on_mono_display_update(pos, objref, tText)
     local chars = rows * 2
 	local ndef = minetest.registered_nodes[minetest.get_node(pos).name]
 
-	if entity then
+	if entity and ndef and ndef.display_entities then
         local def = ndef.display_entities[entity.name]
         if def then
             objref:set_properties({ 

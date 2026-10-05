@@ -148,6 +148,7 @@ end
 
 --- Call on_display_update callback of a node for one of its display entities
 local function call_node_on_display_update(pos, objref)
+	pos = vector.floor(pos)
 	local ndef = minetest.registered_nodes[minetest.get_node(pos).name]
 	local entity = objref:get_luaentity()
 	if ndef and ndef.display_entities and entity and ndef.display_entities[entity.name] then
