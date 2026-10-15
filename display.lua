@@ -146,14 +146,58 @@ local function place_entities(pos)
 	return objrefs
 end
 
+--- Find the display node belonging to an entity. Display entities are placed
+--- slightly offset in front of their node, so the entity position cannot be
+--- used directly (floor/round may point to a neighbouring block). Instead the
+--- node whose expected entity position matches the entity best is chosen.
+local function find_display_node(entity)
+	if not entity or not entity.object then return end
+	local epos = entity.object:get_pos()
+	if not epos then return end
+	local fx = math.floor(epos.x)
+	local fy = math.floor(epos.y)
+	local fz = math.floor(epos.z)
+	local best_q, best_ndef, best_d
+	for dx = -1, 1 do
+	for dy = -1, 1 do
+	for dz = -1, 1 do
+		local q = {x = fx + dx, y = fy + dy, z = fz + dz}
+		local node = minetest.get_node(q)
+		local ndef = minetest.registered_nodes[node.name]
+		if ndef and ndef.display_entities and ndef.display_entities[entity.name] then
+			local values = get_values(node)
+			if values then
+				local def = ndef.display_entities[entity.name]
+				local depth = clip_pos_prop(def.depth)
+				local height = clip_pos_prop(def.height)
+				local right = clip_pos_prop(def.right)
+				local yoffs = clip_pos_prop(def.yoffs)
+				local ex = q.x - values.dx * depth + values.rx * right
+				local ey = q.y + height + yoffs
+				local ez = q.z - values.dz * depth + values.rz * right
+				local d = (ex - epos.x)^2 + (ey - epos.y)^2 + (ez - epos.z)^2
+				if not best_d or d < best_d then
+					best_q, best_ndef, best_d = q, ndef, d
+				end
+			end
+		end
+	end end end
+	return best_q, best_ndef
+end
+
 --- Call on_display_update callback of a node for one of its display entities
 local function call_node_on_display_update(pos, objref)
-	pos = vector.floor(pos)
-	local ndef = minetest.registered_nodes[minetest.get_node(pos).name]
 	local entity = objref:get_luaentity()
-	if ndef and ndef.display_entities and entity and ndef.display_entities[entity.name] then
-		ndef.display_entities[entity.name].on_display_update(pos, objref)
-	end	
+	local npos, ndef = find_display_node(entity)
+	if not ndef then
+		-- fallback: use the node at the given (already rounded) position
+		npos = vector.round(pos)
+		ndef = minetest.registered_nodes[minetest.get_node(npos).name]
+		if not (ndef and ndef.display_entities and entity and ndef.display_entities[entity.name]) then
+			return
+		end
+	end
+	ndef.display_entities[entity.name].on_display_update(npos, objref)
 end
 
 --- Force entity update
